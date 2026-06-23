@@ -33,7 +33,7 @@ img{max-width:100%;display:block}
 
 /* 3D COIN - Three.js gravity fall overlay */
 #coin-overlay{
-  position:fixed;inset:0;z-index:50;
+  position:fixed;inset:0;z-index:5;
   pointer-events:none;
 }
 #coin-overlay canvas{width:100%;height:100%;display:block}
@@ -253,7 +253,7 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
   .hero-title{font-size:2.6rem}
   .gallery-grid{grid-template-columns:repeat(2,1fr)}
   .form-row{grid-template-columns:1fr}
-  #coin-overlay{z-index:1;opacity:0.15}
+  #coin-overlay{transform:scale(0.65);transform-origin:center center}
   .hero-sub{margin-bottom:28px}
   .hero{padding-bottom:60px}
   .menu-panel.active{column-count:1}
@@ -263,6 +263,8 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
   .section-title{font-size:1.8rem}
   .gallery-grid{grid-template-columns:1fr}
 }
+#contacto{position:relative;z-index:10}
+
 @media(prefers-reduced-motion:reduce){
   .hero-bg,.hero-scroll{animation:none!important}
 }
@@ -302,8 +304,6 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
     <div class="scroll-line"></div>
   </div>
 </section>
-
-<div id="coin-overlay"><canvas id="coinCanvas"></canvas></div>
 
 <section class="section" id="sobre">
   <div class="container">
@@ -574,6 +574,8 @@ form.addEventListener('submit', e => {
   form.reset();
 });
 </script>
+
+<div id="coin-overlay"><canvas id="coinCanvas"></canvas></div>
 
 <!-- 3D COIN - Three.js gravity fall -->
 <script type="module">
