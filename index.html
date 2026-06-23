@@ -35,10 +35,8 @@ img{max-width:100%;display:block}
 #coin-overlay{
   position:fixed;inset:0;z-index:50;
   pointer-events:none;
-  display:none;
 }
 #coin-overlay canvas{width:100%;height:100%;display:block}
-@media(min-width:1040px){#coin-overlay{display:block}}
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:10px;
@@ -256,10 +254,9 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
   .hero-title{font-size:2.6rem}
   .gallery-grid{grid-template-columns:repeat(2,1fr)}
   .form-row{grid-template-columns:1fr}
-  #coin-overlay{display:none!important}
 }
 @media(prefers-reduced-motion:reduce){
-  *{animation:none!important;transition:none!important}
+  .hero-bg,.hero-scroll{animation:none!important}
 }
 </style>
 </head>
