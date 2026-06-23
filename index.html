@@ -31,14 +31,23 @@ img{max-width:100%;display:block}
 .container{max-width:1180px;margin:0 auto;padding:0 24px}
 .section{padding:110px 0;position:relative}
 
-/* 3D COIN - fixed, follows scroll */
-#coin-wrap{
-  position:fixed;right:24px;top:50%;transform:translateY(-50%);
-  width:120px;height:120px;z-index:100;pointer-events:none;
+/* 3D COIN - sticky centered section (like fop pattern) */
+.coin-section{
+  min-height:200vh;position:relative;
   display:none;
 }
-#coin-wrap canvas{width:100%;height:100%;display:block}
-@media(min-width:1040px){#coin-wrap{display:block}}
+.coin-sticky{
+  position:sticky;top:calc(50% - 125px);
+  width:250px;height:250px;margin:0 auto;
+  z-index:10;
+}
+.coin-sticky::before{
+  content:'';position:absolute;inset:-50px;
+  background:radial-gradient(circle,rgba(192,122,30,0.10) 0%,transparent 70%);
+  border-radius:50%;pointer-events:none;
+}
+.coin-sticky canvas{width:100%;height:100%;display:block;position:relative;z-index:1}
+@media(min-width:1040px){.coin-section{display:block}}
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:10px;
@@ -236,7 +245,7 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
   .hero-title{font-size:2.6rem}
   .gallery-grid{grid-template-columns:repeat(2,1fr)}
   .form-row{grid-template-columns:1fr}
-  #coin-wrap{display:none!important}
+  .coin-section{display:none!important}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
@@ -244,8 +253,6 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
 </style>
 </head>
 <body>
-
-<div id="coin-wrap"><canvas id="coinCanvas"></canvas></div>
 
 <nav id="nav">
   <div class="nav-inner">
@@ -277,6 +284,12 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
   <div class="hero-scroll">
     <span>Zarpamos</span>
     <div class="scroll-line"></div>
+  </div>
+</section>
+
+<section class="coin-section" id="moneda">
+  <div class="coin-sticky">
+    <canvas id="coinCanvas"></canvas>
   </div>
 </section>
 
@@ -546,16 +559,15 @@ form.addEventListener('submit', e => {
   form.reset();
 });
 
-/* 3D COIN LINKED TO SCROLL */
+/* 3D COIN - sticky centered (like fop pattern) */
 (function(){
-  var wrap=document.getElementById('coin-wrap');
   var canvas=document.getElementById('coinCanvas');
   if(!canvas)return;
+  var wrap=canvas.parentElement;
   var ctx=canvas.getContext('2d');
-  var size=wrap.offsetWidth||120;
+  var size=250;
   var dpr=window.devicePixelRatio||1;
   function resize(){
-    size=wrap.offsetWidth||120;
     canvas.width=size*dpr;
     canvas.height=size*dpr;
     canvas.style.width=size+'px';
@@ -563,7 +575,6 @@ form.addEventListener('submit', e => {
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
   resize();
-  window.addEventListener('resize',resize);
 
   var coin={
     x:size/2,y:size/2,
@@ -587,7 +598,6 @@ form.addEventListener('submit', e => {
     ctx.translate(coin.x,coin.y);
     ctx.scale(absScale,1);
 
-    /* shadow */
     ctx.save();
     ctx.scale(1/absScale,1);
     ctx.translate(0,coin.r*0.35);
@@ -599,7 +609,6 @@ form.addEventListener('submit', e => {
     ctx.fill();
     ctx.restore();
 
-    /* coin body */
     var grad=ctx.createRadialGradient(
       -coin.r*0.35,-coin.r*0.4,coin.r*0.1,
       0,0,coin.r*1.05
@@ -623,7 +632,6 @@ form.addEventListener('submit', e => {
     ctx.strokeStyle='rgba(50,32,8,0.6)';
     ctx.stroke();
 
-    /* engraved ring + emblem */
     if(absScale>0.35){
       ctx.beginPath();
       ctx.arc(0,0,coin.r*0.72,0,Math.PI*2);
@@ -638,7 +646,6 @@ form.addEventListener('submit', e => {
       ctx.fillText(faceVisible?'G':'☠',0,coin.r*0.05);
     }
 
-    /* specular glint */
     var glintX=-coin.r*0.5+((angle%(Math.PI*2))/(Math.PI*2))*coin.r*1.4;
     var glintGrad=ctx.createLinearGradient(glintX-3,0,glintX+3,0);
     glintGrad.addColorStop(0,'rgba(255,255,255,0)');
@@ -653,7 +660,6 @@ form.addEventListener('submit', e => {
     ctx.fillRect(-coin.r,-coin.r,coin.r*2,coin.r*2);
     ctx.restore();
 
-    /* edge rim highlight on sides */
     if(absScale>0.2){
       ctx.save();
       ctx.scale(1/absScale,1);
@@ -679,14 +685,11 @@ form.addEventListener('submit', e => {
   }
 
   window.addEventListener('scroll',updateScroll,{passive:true});
-  window.addEventListener('resize',function(){resize();updateScroll();});
   updateScroll();
 
-  /* continuous subtle animation */
   (function animLoop(){
     floatTime+=0.012;
     coin.floatOffset=Math.sin(floatTime)*0.08;
-    /* recalc scroll angle in case scroll hasn't moved */
     var docH=document.documentElement.scrollHeight-window.innerHeight;
     var pct=docH>0?Math.min(1,Math.max(0,window.scrollY/docH)):0;
     coin.scrollAngle=pct*Math.PI*6;
