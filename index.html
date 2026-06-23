@@ -576,80 +576,180 @@ form.addEventListener('submit', e => {
 
 <div id="coin-overlay"><canvas id="coinCanvas"></canvas></div>
 
+<!-- 3D COIN - Three.js gravity fall -->
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';
 
-const M = window.innerWidth < 768;
-const c = document.getElementById('coin-overlay');
-const v = document.getElementById('coinCanvas');
-if (!c || !v) return;
+const isMobile = window.innerWidth < 768;
+const container = document.getElementById('coin-overlay');
+const canvas = document.getElementById('coinCanvas');
+if (!container || !canvas) return;
 
-const s = new THREE.Scene();
-const cm = new THREE.PerspectiveCamera(40, c.clientWidth / c.clientHeight, 0.1, 50);
-cm.position.set(0, 0.2, M ? 8 : 6);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 50);
+camera.position.set(0, 0.2, 6);
 
-const r = new THREE.WebGLRenderer({ canvas: v, alpha: true, antialias: true });
-r.setPixelRatio(M ? 1 : Math.min(window.devicePixelRatio, 1.5));
-r.setSize(c.clientWidth, c.clientHeight);
-r.toneMapping = THREE.ACESFilmicToneMapping;
-r.toneMappingExposure = 2;
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 1.5));
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 2;
 
-const sg = M ? 32 : 48;
+const seg = isMobile ? 32 : 48;
+const ambient = new THREE.AmbientLight(0x404060, 0.5);
+scene.add(ambient);
+const key = new THREE.DirectionalLight(0xffeedd, 3);
+key.position.set(3, 5, 4);
+scene.add(key);
+const fill = new THREE.DirectionalLight(0x4488ff, 0.6);
+fill.position.set(-3, 1, 2);
+scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffffff, 1);
+rim.position.set(0, -1, -4);
+scene.add(rim);
+const top = new THREE.DirectionalLight(0xffcc66, 0.4);
+top.position.set(0, 6, 0);
+scene.add(top);
 
-const al = new THREE.AmbientLight(0x404060, 0.5); s.add(al);
-const kl = new THREE.DirectionalLight(0xffeedd, 3); kl.position.set(3, 5, 4); s.add(kl);
-const fl = new THREE.DirectionalLight(0x4488ff, 0.6); fl.position.set(-3, 1, 2); s.add(fl);
-const rl = new THREE.DirectionalLight(0xffffff, 1); rl.position.set(0, -1, -4); s.add(rl);
-const tl = new THREE.DirectionalLight(0xffcc66, 0.4); tl.position.set(0, 6, 0); s.add(tl);
+const coinGroup = new THREE.Group();
 
-const g = new THREE.Group();
+const texSize = isMobile ? 768 : 1024;
+const tc = document.createElement('canvas');
+tc.width = tc.height = texSize;
+const tCtx = tc.getContext('2d');
+const g = tCtx.createRadialGradient(texSize/2, texSize/2, 0, texSize/2, texSize/2, texSize/2);
+g.addColorStop(0, '#FCEBA8');
+g.addColorStop(0.3, '#E8C060');
+g.addColorStop(0.65, '#C07A1E');
+g.addColorStop(1, '#7A4A0E');
+tCtx.fillStyle = g;
+tCtx.fillRect(0, 0, texSize, texSize);
+tCtx.beginPath();
+tCtx.arc(texSize/2, texSize/2, texSize*0.44, 0, Math.PI*2);
+tCtx.strokeStyle = '#6A3A08';
+tCtx.lineWidth = 8;
+tCtx.stroke();
+tCtx.beginPath();
+tCtx.arc(texSize/2, texSize/2, texSize*0.37, 0, Math.PI*2);
+tCtx.strokeStyle = '#B58A2E';
+tCtx.lineWidth = 2;
+tCtx.setLineDash([10, 14]);
+tCtx.stroke();
+tCtx.setLineDash([]);
+const fs = texSize*0.48;
+tCtx.fillStyle = '#4A2A04';
+tCtx.font = 'bold '+fs+'px Georgia,serif';
+tCtx.textAlign = 'center';
+tCtx.textBaseline = 'middle';
+tCtx.fillText('G', texSize/2, texSize/2+6);
+tCtx.font = (texSize*0.055)+'px Georgia,serif';
+tCtx.fillStyle = '#6A4A14';
+tCtx.fillText('GALEON', texSize/2, texSize*0.13);
+tCtx.fillText('TAVERN', texSize/2, texSize*0.87);
+for (let i = 0; i < 12; i++) {
+  const a = (i/12)*Math.PI*2;
+  tCtx.beginPath();
+  tCtx.arc(texSize/2+Math.cos(a)*texSize*0.32, texSize/2+Math.sin(a)*texSize*0.32, 8, 0, Math.PI*2);
+  tCtx.fillStyle = '#8A6A22';
+  tCtx.fill();
+}
+const tex = new THREE.CanvasTexture(tc);
 
-const q = M ? 768 : 1024, dc = document.createElement('canvas');
-dc.width = dc.height = q;
-const cx = dc.getContext('2d');
-const gr = cx.createRadialGradient(q / 2, q / 2, 0, q / 2, q / 2, q / 2);
-gr.addColorStop(0, '#FCEBA8'); gr.addColorStop(0.3, '#E8C060'); gr.addColorStop(0.65, '#C07A1E'); gr.addColorStop(1, '#7A4A0E');
-cx.fillStyle = gr; cx.fillRect(0, 0, q, q);
-cx.beginPath(); cx.arc(q / 2, q / 2, q * 0.44, 0, Math.PI * 2); cx.strokeStyle = '#6A3A08'; cx.lineWidth = 8; cx.stroke();
-cx.beginPath(); cx.arc(q / 2, q / 2, q * 0.37, 0, Math.PI * 2); cx.strokeStyle = '#B58A2E'; cx.lineWidth = 2; cx.setLineDash([10, 14]); cx.stroke(); cx.setLineDash([]);
-cx.fillStyle = '#4A2A04'; cx.font = 'bold ' + (q * 0.48) + 'px Georgia,serif'; cx.textAlign = 'center'; cx.textBaseline = 'middle'; cx.fillText('G', q / 2, q / 2 + 6);
-cx.font = (q * 0.055) + 'px Georgia,serif'; cx.fillStyle = '#6A4A14'; cx.fillText('GALEON', q / 2, q * 0.13); cx.fillText('TAVERN', q / 2, q * 0.87);
-for (let i = 0; i < 12; i++) { const a = i / 12 * Math.PI * 2; cx.beginPath(); cx.arc(q / 2 + Math.cos(a) * q * 0.32, q / 2 + Math.sin(a) * q * 0.32, 8, 0, Math.PI * 2); cx.fillStyle = '#8A6A22'; cx.fill() }
-const tx = new THREE.CanvasTexture(dc);
+const bodyGeom = new THREE.CylinderGeometry(1, 1, 0.1, seg);
+const bodyMat = new THREE.MeshStandardMaterial({ map: tex, metalness: 0.9, roughness: 0.2 });
+const body = new THREE.Mesh(bodyGeom, bodyMat);
+body.rotation.x = Math.PI/2;
+coinGroup.add(body);
 
-const bm = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 0.1, sg), new THREE.MeshStandardMaterial({ map: tx, metalness: 0.9, roughness: 0.2 }));
-bm.rotation.x = Math.PI / 2; g.add(bm);
+const edgeGeom = new THREE.TorusGeometry(1, 0.05, seg/2, seg);
+const edgeMat = new THREE.MeshStandardMaterial({ color: 0xA0701E, metalness: 0.85, roughness: 0.35 });
+const edge = new THREE.Mesh(edgeGeom, edgeMat);
+edge.rotation.x = Math.PI/2;
+coinGroup.add(edge);
 
-const em = new THREE.Mesh(new THREE.TorusGeometry(1, 0.05, sg / 2, sg), new THREE.MeshStandardMaterial({ color: 0xA0701E, metalness: 0.85, roughness: 0.35 }));
-em.rotation.x = Math.PI / 2; g.add(em);
+const rimDots = isMobile ? 36 : 48;
+for (let i = 0; i < rimDots; i++) {
+  const a = (i/rimDots)*Math.PI*2;
+  const d = new THREE.Mesh(
+    new THREE.SphereGeometry(0.018, 3, 3),
+    new THREE.MeshStandardMaterial({ color: 0x7A4A0E, metalness: 0.7, roughness: 0.5 })
+  );
+  d.position.set(Math.cos(a)*1.03, Math.sin(a)*1.03, 0.052);
+  coinGroup.add(d);
+}
+coinGroup.position.y = 4.5;
+coinGroup.rotation.x = 0.8;
+coinGroup.rotation.z = 0.5;
+if (isMobile) coinGroup.scale.set(0.6, 0.6, 0.6);
+scene.add(coinGroup);
 
-const rd = M ? 36 : 48;
-for (let i = 0; i < rd; i++) { const a = i / rd * Math.PI * 2; const dm = new THREE.Mesh(new THREE.SphereGeometry(0.018, 3, 3), new THREE.MeshStandardMaterial({ color: 0x7A4A0E, metalness: 0.7, roughness: 0.5 })); dm.position.set(Math.cos(a) * 1.03, Math.sin(a) * 1.03, 0.052); g.add(dm) }
-
-if (M) g.scale.set(0.6, 0.6, 0.6);
-g.position.y = 4.5; g.rotation.x = 0.8; g.rotation.z = 0.5; s.add(g);
-
-const pc = M ? 30 : 60, pg = new THREE.BufferGeometry(), pos = new Float32Array(pc * 3);
-for (let i = 0; i < pc; i++) { const t = Math.random() * Math.PI * 2; const r = 1.5 + Math.random() * 4; pos[i * 3] = Math.cos(t) * r; pos[i * 3 + 1] = (Math.random() - 0.5) * 6; pos[i * 3 + 2] = Math.sin(t) * r }
+const pc = isMobile ? 20 : 60;
+const pg = new THREE.BufferGeometry();
+const pos = new Float32Array(pc*3);
+for (let i = 0; i < pc; i++) {
+  const theta = Math.random()*Math.PI*2;
+  const r = 1.5 + Math.random()*4;
+  pos[i*3] = Math.cos(theta)*r;
+  pos[i*3+1] = (Math.random()-0.5)*6;
+  pos[i*3+2] = Math.sin(theta)*r;
+}
 pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-const pm = new THREE.PointsMaterial({ color: 0xD4A544, size: 0.025, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
-const pt = new THREE.Points(pg, pm); s.add(pt);
+const pm = new THREE.PointsMaterial({
+  color: 0xD4A544, size: isMobile ? 0.02 : 0.025, transparent: true,
+  opacity: 0.3, blending: THREE.AdditiveBlending,
+});
+const particles = new THREE.Points(pg, pm);
+scene.add(particles);
 
-const gm = new THREE.Mesh(new THREE.SphereGeometry(1.4, sg / 2, sg / 2), new THREE.MeshBasicMaterial({ color: 0xD4A544, transparent: true, opacity: 0.06, blending: THREE.AdditiveBlending, depthWrite: false }));
-g.add(gm);
+const glowGeom = new THREE.SphereGeometry(1.4, seg/2, seg/2);
+const glowMat = new THREE.MeshBasicMaterial({
+  color: 0xD4A544, transparent: true, opacity: 0.06,
+  blending: THREE.AdditiveBlending, depthWrite: false,
+});
+const glow = new THREE.Mesh(glowGeom, glowMat);
+coinGroup.add(glow);
 
-function ud(p) { const t = Math.min(1, Math.max(0, p)), gt = t * t; g.position.y = 4.5 + (-9) * gt; const rt = t < 0.85 ? t / 0.85 : 1 - (t - 0.85) / 0.15 * 0.15; g.rotation.x = 0.8 + rt * Math.PI * 4; g.rotation.z = 0.5 + rt * Math.PI * 2.2; gm.material.opacity = 0.06 * (1 - t * 0.7) }
+const START_Y = 4.5, END_Y = -4.5;
 
-function rs() { r.setSize(c.clientWidth, c.clientHeight); cm.aspect = c.clientWidth / c.clientHeight; cm.updateProjectionMatrix() }
-window.addEventListener('resize', rs);
+let currentProgress = 0;
 
-function sc() { const dh = document.documentElement.scrollHeight - window.innerHeight; ud(dh > 0 ? Math.min(1, Math.max(0, window.scrollY / dh)) : 0) }
-window.addEventListener('scroll', sc, { passive: true }); sc();
+function updateCoin(progress) {
+  currentProgress = progress;
+  const t = Math.min(1, Math.max(0, progress));
+  const gravityT = t*t;
+  coinGroup.position.y = START_Y + (END_Y - START_Y)*gravityT;
+  const rotT = t < 0.85 ? t/0.85 : 1 - (t-0.85)/0.15*0.15;
+  coinGroup.rotation.x = 0.8 + rotT * Math.PI * 4;
+  coinGroup.rotation.z = 0.5 + rotT * Math.PI * 2.2;
+  glowMat.opacity = 0.06 * (1 - t*0.7);
+}
 
-let aid;
-function an() { aid = requestAnimationFrame(an); r.render(s, cm) }
-document.addEventListener('visibilitychange', () => { document.hidden ? cancelAnimationFrame(aid) : an() });
-an();
+function resize() {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+function onScroll() {
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  updateCoin(dh > 0 ? Math.min(1, Math.max(0, window.scrollY / dh)) : 0);
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+let animId;
+function animate() {
+  animId = requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { cancelAnimationFrame(animId); }
+  else { animate(); }
+});
+animate();
 </script>
 </body>
 </html>
