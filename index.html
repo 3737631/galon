@@ -581,21 +581,22 @@ form.addEventListener('submit', e => {
 <script type="module">
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';
 
+const isMobile = window.innerWidth < 768;
 const container = document.getElementById('coin-overlay');
 const canvas = document.getElementById('coinCanvas');
-if (!container || !canvas) throw new Error('Missing coin elements');
+if (!container || !canvas) return;
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 50);
 camera.position.set(0, 0.2, 6);
-camera.lookAt(0, 0, 0);
 
-const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !isMobile });
+renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 2;
 
+const seg = isMobile ? 24 : 48;
 const ambient = new THREE.AmbientLight(0x404060, 0.5);
 scene.add(ambient);
 const key = new THREE.DirectionalLight(0xffeedd, 3);
@@ -613,7 +614,7 @@ scene.add(top);
 
 const coinGroup = new THREE.Group();
 
-const texSize = 1024;
+const texSize = isMobile ? 512 : 1024;
 const tc = document.createElement('canvas');
 tc.width = tc.height = texSize;
 const tCtx = tc.getContext('2d');
@@ -636,8 +637,9 @@ tCtx.lineWidth = 2;
 tCtx.setLineDash([10, 14]);
 tCtx.stroke();
 tCtx.setLineDash([]);
+const fs = texSize*0.48;
 tCtx.fillStyle = '#4A2A04';
-tCtx.font = 'bold '+(texSize*0.48)+'px Georgia,serif';
+tCtx.font = 'bold '+fs+'px Georgia,serif';
 tCtx.textAlign = 'center';
 tCtx.textBaseline = 'middle';
 tCtx.fillText('G', texSize/2, texSize/2+6);
@@ -654,52 +656,52 @@ for (let i = 0; i < 12; i++) {
 }
 const tex = new THREE.CanvasTexture(tc);
 
-const bodyGeom = new THREE.CylinderGeometry(1, 1, 0.1, 64);
+const bodyGeom = new THREE.CylinderGeometry(1, 1, 0.1, seg);
 const bodyMat = new THREE.MeshStandardMaterial({ map: tex, metalness: 0.9, roughness: 0.2 });
 const body = new THREE.Mesh(bodyGeom, bodyMat);
 body.rotation.x = Math.PI/2;
 coinGroup.add(body);
 
-const edgeGeom = new THREE.TorusGeometry(1, 0.05, 16, 64);
+const edgeGeom = new THREE.TorusGeometry(1, 0.05, seg/2, seg);
 const edgeMat = new THREE.MeshStandardMaterial({ color: 0xA0701E, metalness: 0.85, roughness: 0.35 });
 const edge = new THREE.Mesh(edgeGeom, edgeMat);
 edge.rotation.x = Math.PI/2;
 coinGroup.add(edge);
 
-for (let i = 0; i < 60; i++) {
-  const a = (i/60)*Math.PI*2;
+const rimDots = isMobile ? 24 : 48;
+for (let i = 0; i < rimDots; i++) {
+  const a = (i/rimDots)*Math.PI*2;
   const d = new THREE.Mesh(
-    new THREE.SphereGeometry(0.018, 4, 4),
+    new THREE.SphereGeometry(0.018, 3, 3),
     new THREE.MeshStandardMaterial({ color: 0x7A4A0E, metalness: 0.7, roughness: 0.5 })
   );
   d.position.set(Math.cos(a)*1.03, Math.sin(a)*1.03, 0.052);
   coinGroup.add(d);
 }
-coinGroup.position.y = 5;
+coinGroup.position.y = 4.5;
+coinGroup.rotation.x = 0.8;
+coinGroup.rotation.z = 0.5;
 scene.add(coinGroup);
 
-const pc = 100;
+const pc = isMobile ? 20 : 60;
 const pg = new THREE.BufferGeometry();
 const pos = new Float32Array(pc*3);
-const opacities = new Float32Array(pc);
 for (let i = 0; i < pc; i++) {
   const theta = Math.random()*Math.PI*2;
   const r = 1.5 + Math.random()*4;
   pos[i*3] = Math.cos(theta)*r;
   pos[i*3+1] = (Math.random()-0.5)*6;
   pos[i*3+2] = Math.sin(theta)*r;
-  opacities[i] = 0.2 + Math.random()*0.5;
 }
 pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-pg.setAttribute('opacity', new THREE.BufferAttribute(opacities, 1));
 const pm = new THREE.PointsMaterial({
-  color: 0xD4A544, size: 0.03, transparent: true,
-  opacity: 0.4, blending: THREE.AdditiveBlending,
+  color: 0xD4A544, size: isMobile ? 0.02 : 0.025, transparent: true,
+  opacity: 0.3, blending: THREE.AdditiveBlending,
 });
 const particles = new THREE.Points(pg, pm);
 scene.add(particles);
 
-const glowGeom = new THREE.SphereGeometry(1.4, 24, 24);
+const glowGeom = new THREE.SphereGeometry(1.4, seg/2, seg/2);
 const glowMat = new THREE.MeshBasicMaterial({
   color: 0xD4A544, transparent: true, opacity: 0.06,
   blending: THREE.AdditiveBlending, depthWrite: false,
@@ -709,13 +711,16 @@ coinGroup.add(glow);
 
 const START_Y = 4.5, END_Y = -4.5;
 
+let currentProgress = 0;
+
 function updateCoin(progress) {
+  currentProgress = progress;
   const t = Math.min(1, Math.max(0, progress));
   const gravityT = t*t;
   coinGroup.position.y = START_Y + (END_Y - START_Y)*gravityT;
-  const rotT = t < 0.85 ? t/0.85 : 1 - (t-0.85)/0.15*0.2;
-  coinGroup.rotation.x = rotT * Math.PI * 4;
-  coinGroup.rotation.z = rotT * Math.PI * 2;
+  const rotT = t < 0.85 ? t/0.85 : 1 - (t-0.85)/0.15*0.15;
+  coinGroup.rotation.x = 0.8 + rotT * Math.PI * 4;
+  coinGroup.rotation.z = 0.5 + rotT * Math.PI * 2.2;
   glowMat.opacity = 0.06 * (1 - t*0.7);
 }
 
@@ -735,11 +740,15 @@ function onScroll() {
 window.addEventListener('scroll', onScroll, { passive: true });
 onScroll();
 
+let animId;
 function animate() {
-  requestAnimationFrame(animate);
-  particles.rotation.y += 0.0004;
+  animId = requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { cancelAnimationFrame(animId); }
+  else { animate(); }
+});
 animate();
 </script>
 </body>
