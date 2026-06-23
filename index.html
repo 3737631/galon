@@ -253,6 +253,7 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
   .hero-title{font-size:2.6rem}
   .gallery-grid{grid-template-columns:repeat(2,1fr)}
   .form-row{grid-template-columns:1fr}
+  #coin-overlay{transform:scale(0.65);transform-origin:center center}
   .hero-sub{margin-bottom:28px}
   .hero{padding-bottom:60px}
   .menu-panel.active{column-count:1}
@@ -576,51 +577,179 @@ form.addEventListener('submit', e => {
 
 <div id="coin-overlay"><canvas id="coinCanvas"></canvas></div>
 
-<script>
-(function(){
-var c=document.getElementById('coin-overlay'),v=document.getElementById('coinCanvas');
-if(!c||!v)return;
-var M=window.innerWidth<768,W=0,H=0,cx=0,cy=0,R=0,ctx=v.getContext('2d');
+<!-- 3D COIN - Three.js gravity fall -->
+<script type="module">
+import * as THREE from './js/three.module.js';
 
-function rs(){
-W=c.clientWidth;H=c.clientHeight;
-v.width=W;v.height=H;
-cx=W/2;cy=H/2;
-R=M?Math.min(W,H)*0.19:Math.min(W,H)*0.28;
-draw(current||0);
+const isMobile = window.innerWidth < 768;
+const container = document.getElementById('coin-overlay');
+const canvas = document.getElementById('coinCanvas');
+if (!container || !canvas) return;
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 50);
+camera.position.set(0, 0.2, 6);
+
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !isMobile });
+renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 1.5));
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 2;
+
+const seg = isMobile ? 24 : 48;
+const ambient = new THREE.AmbientLight(0x404060, 0.5);
+scene.add(ambient);
+const key = new THREE.DirectionalLight(0xffeedd, 3);
+key.position.set(3, 5, 4);
+scene.add(key);
+const fill = new THREE.DirectionalLight(0x4488ff, 0.6);
+fill.position.set(-3, 1, 2);
+scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffffff, 1);
+rim.position.set(0, -1, -4);
+scene.add(rim);
+const top = new THREE.DirectionalLight(0xffcc66, 0.4);
+top.position.set(0, 6, 0);
+scene.add(top);
+
+const coinGroup = new THREE.Group();
+
+const texSize = isMobile ? 512 : 1024;
+const tc = document.createElement('canvas');
+tc.width = tc.height = texSize;
+const tCtx = tc.getContext('2d');
+const g = tCtx.createRadialGradient(texSize/2, texSize/2, 0, texSize/2, texSize/2, texSize/2);
+g.addColorStop(0, '#FCEBA8');
+g.addColorStop(0.3, '#E8C060');
+g.addColorStop(0.65, '#C07A1E');
+g.addColorStop(1, '#7A4A0E');
+tCtx.fillStyle = g;
+tCtx.fillRect(0, 0, texSize, texSize);
+tCtx.beginPath();
+tCtx.arc(texSize/2, texSize/2, texSize*0.44, 0, Math.PI*2);
+tCtx.strokeStyle = '#6A3A08';
+tCtx.lineWidth = 8;
+tCtx.stroke();
+tCtx.beginPath();
+tCtx.arc(texSize/2, texSize/2, texSize*0.37, 0, Math.PI*2);
+tCtx.strokeStyle = '#B58A2E';
+tCtx.lineWidth = 2;
+tCtx.setLineDash([10, 14]);
+tCtx.stroke();
+tCtx.setLineDash([]);
+const fs = texSize*0.48;
+tCtx.fillStyle = '#4A2A04';
+tCtx.font = 'bold '+fs+'px Georgia,serif';
+tCtx.textAlign = 'center';
+tCtx.textBaseline = 'middle';
+tCtx.fillText('G', texSize/2, texSize/2+6);
+tCtx.font = (texSize*0.055)+'px Georgia,serif';
+tCtx.fillStyle = '#6A4A14';
+tCtx.fillText('GALEON', texSize/2, texSize*0.13);
+tCtx.fillText('TAVERN', texSize/2, texSize*0.87);
+for (let i = 0; i < 12; i++) {
+  const a = (i/12)*Math.PI*2;
+  tCtx.beginPath();
+  tCtx.arc(texSize/2+Math.cos(a)*texSize*0.32, texSize/2+Math.sin(a)*texSize*0.32, 8, 0, Math.PI*2);
+  tCtx.fillStyle = '#8A6A22';
+  tCtx.fill();
+}
+const tex = new THREE.CanvasTexture(tc);
+
+const bodyGeom = new THREE.CylinderGeometry(1, 1, 0.1, seg);
+const bodyMat = new THREE.MeshStandardMaterial({ map: tex, metalness: 0.9, roughness: 0.2 });
+const body = new THREE.Mesh(bodyGeom, bodyMat);
+body.rotation.x = Math.PI/2;
+coinGroup.add(body);
+
+const edgeGeom = new THREE.TorusGeometry(1, 0.05, seg/2, seg);
+const edgeMat = new THREE.MeshStandardMaterial({ color: 0xA0701E, metalness: 0.85, roughness: 0.35 });
+const edge = new THREE.Mesh(edgeGeom, edgeMat);
+edge.rotation.x = Math.PI/2;
+coinGroup.add(edge);
+
+const rimDots = isMobile ? 24 : 48;
+for (let i = 0; i < rimDots; i++) {
+  const a = (i/rimDots)*Math.PI*2;
+  const d = new THREE.Mesh(
+    new THREE.SphereGeometry(0.018, 3, 3),
+    new THREE.MeshStandardMaterial({ color: 0x7A4A0E, metalness: 0.7, roughness: 0.5 })
+  );
+  d.position.set(Math.cos(a)*1.03, Math.sin(a)*1.03, 0.052);
+  coinGroup.add(d);
+}
+coinGroup.position.y = 4.5;
+coinGroup.rotation.x = 0.8;
+coinGroup.rotation.z = 0.5;
+scene.add(coinGroup);
+
+const pc = isMobile ? 20 : 60;
+const pg = new THREE.BufferGeometry();
+const pos = new Float32Array(pc*3);
+for (let i = 0; i < pc; i++) {
+  const theta = Math.random()*Math.PI*2;
+  const r = 1.5 + Math.random()*4;
+  pos[i*3] = Math.cos(theta)*r;
+  pos[i*3+1] = (Math.random()-0.5)*6;
+  pos[i*3+2] = Math.sin(theta)*r;
+}
+pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+const pm = new THREE.PointsMaterial({
+  color: 0xD4A544, size: isMobile ? 0.02 : 0.025, transparent: true,
+  opacity: 0.3, blending: THREE.AdditiveBlending,
+});
+const particles = new THREE.Points(pg, pm);
+scene.add(particles);
+
+const glowGeom = new THREE.SphereGeometry(1.4, seg/2, seg/2);
+const glowMat = new THREE.MeshBasicMaterial({
+  color: 0xD4A544, transparent: true, opacity: 0.06,
+  blending: THREE.AdditiveBlending, depthWrite: false,
+});
+const glow = new THREE.Mesh(glowGeom, glowMat);
+coinGroup.add(glow);
+
+const START_Y = 4.5, END_Y = -4.5;
+
+let currentProgress = 0;
+
+function updateCoin(progress) {
+  currentProgress = progress;
+  const t = Math.min(1, Math.max(0, progress));
+  const gravityT = t*t;
+  coinGroup.position.y = START_Y + (END_Y - START_Y)*gravityT;
+  const rotT = t < 0.85 ? t/0.85 : 1 - (t-0.85)/0.15*0.15;
+  coinGroup.rotation.x = 0.8 + rotT * Math.PI * 4;
+  coinGroup.rotation.z = 0.5 + rotT * Math.PI * 2.2;
+  glowMat.opacity = 0.06 * (1 - t*0.7);
 }
 
-function draw(pr){
-var t=Math.min(1,Math.max(0,pr)),gt=t*t;
-var yy=-R*2+(cy+R*2)*gt;
-ctx.clearRect(0,0,W,H);
-ctx.save();
-ctx.translate(cx,yy);
-ctx.rotate(gt*Math.PI*2);
-var g=ctx.createRadialGradient(-R*0.35,-R*0.35,R*0.1,0,0,R);
-g.addColorStop(0,'#FCEBA8');g.addColorStop(0.25,'#E8C060');g.addColorStop(0.55,'#C07A1E');g.addColorStop(1,'#7A4A0E');
-ctx.beginPath();ctx.arc(0,0,R,0,Math.PI*2);
-ctx.fillStyle=g;ctx.fill();
-ctx.strokeStyle='#8A6A22';ctx.lineWidth=R*0.05;ctx.stroke();
-ctx.beginPath();ctx.arc(0,0,R*0.82,0,Math.PI*2);
-ctx.strokeStyle='#B58A2E';ctx.lineWidth=R*0.02;ctx.stroke();
-ctx.fillStyle='#4A2A04';
-ctx.font='bold '+(R*0.7)+'px Georgia,serif';
-ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('G',0,R*0.05);
-ctx.font=(R*0.1)+'px Georgia,serif';ctx.fillStyle='#6A4A14';
-ctx.fillText('GALEON',0,-R*0.62);ctx.fillText('TAVERN',0,R*0.7);
-for(var i=0;i<12;i++){var a=i/12*Math.PI*2;ctx.beginPath();ctx.arc(Math.cos(a)*R*0.58,Math.sin(a)*R*0.58,R*0.025,0,Math.PI*2);ctx.fillStyle='#8A6A22';ctx.fill()}
-ctx.restore();
-ctx.beginPath();ctx.arc(cx,cy,R*1.3,0,Math.PI*2);
-ctx.fillStyle='rgba(212,165,68,'+(0.05*(1-t*0.7))+')';ctx.fill();
-for(i=0;i<24;i++){var th=i*Math.PI*2/24,rd=R*1.6+Math.sin(i+gt*5)*R*0.4;ctx.beginPath();ctx.arc(cx+Math.cos(th+gt)*rd,yy+Math.sin(th+gt)*rd,R*0.02,0,Math.PI*2);ctx.fillStyle='rgba(212,165,68,'+(0.12*(1-t*0.5))+')';ctx.fill()}
+function resize() {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
 }
-window.addEventListener('resize',rs);
-var current=0;
-function sc(){var dh=document.documentElement.scrollHeight-window.innerHeight;current=dh>0?Math.min(1,Math.max(0,window.scrollY/dh)):0;draw(current)}
-window.addEventListener('scroll',sc,{passive:true});
-rs();
-})();
+window.addEventListener('resize', resize);
+
+function onScroll() {
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  updateCoin(dh > 0 ? Math.min(1, Math.max(0, window.scrollY / dh)) : 0);
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+let animId;
+function animate() {
+  animId = requestAnimationFrame(animate);
+  renderer.render(scene, camera);
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { cancelAnimationFrame(animId); }
+  else { animate(); }
+});
+animate();
 </script>
 </body>
 </html>
