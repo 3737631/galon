@@ -253,6 +253,7 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
   .hero-title{font-size:2.6rem}
   .gallery-grid{grid-template-columns:repeat(2,1fr)}
   .form-row{grid-template-columns:1fr}
+  #coin-overlay{transform:scale(0.65);transform-origin:center center}
   .hero-sub{margin-bottom:28px}
   .hero{padding-bottom:60px}
   .menu-panel.active{column-count:1}
@@ -589,13 +590,13 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 50);
 camera.position.set(0, 0.2, 6);
 
-const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !isMobile });
 renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 1.5));
 renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 2;
 
-const seg = isMobile ? 32 : 48;
+const seg = isMobile ? 24 : 48;
 const ambient = new THREE.AmbientLight(0x404060, 0.5);
 scene.add(ambient);
 const key = new THREE.DirectionalLight(0xffeedd, 3);
@@ -613,7 +614,7 @@ scene.add(top);
 
 const coinGroup = new THREE.Group();
 
-const texSize = isMobile ? 768 : 1024;
+const texSize = isMobile ? 512 : 1024;
 const tc = document.createElement('canvas');
 tc.width = tc.height = texSize;
 const tCtx = tc.getContext('2d');
@@ -667,7 +668,7 @@ const edge = new THREE.Mesh(edgeGeom, edgeMat);
 edge.rotation.x = Math.PI/2;
 coinGroup.add(edge);
 
-const rimDots = isMobile ? 36 : 48;
+const rimDots = isMobile ? 24 : 48;
 for (let i = 0; i < rimDots; i++) {
   const a = (i/rimDots)*Math.PI*2;
   const d = new THREE.Mesh(
@@ -680,7 +681,6 @@ for (let i = 0; i < rimDots; i++) {
 coinGroup.position.y = 4.5;
 coinGroup.rotation.x = 0.8;
 coinGroup.rotation.z = 0.5;
-if (isMobile) coinGroup.scale.set(0.6, 0.6, 0.6);
 scene.add(coinGroup);
 
 const pc = isMobile ? 20 : 60;
