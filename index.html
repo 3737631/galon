@@ -7,7 +7,7 @@
 <meta name="description" content="Galeon Tavern — Taberna náutica en Sevilla. Copas, karaoke, salsa y bachata en el Aljarafe.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#0C0906;
@@ -25,7 +25,7 @@
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;line-height:1.7;-webkit-font-smoothing:antialiased}
+body{font-family:'Cormorant Garamond',serif;background:var(--bg);color:var(--ink);overflow-x:hidden;line-height:1.7;-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}
 img{max-width:100%;display:block}
 .container{max-width:1180px;margin:0 auto;padding:0 24px}
@@ -41,8 +41,8 @@ img{max-width:100%;display:block}
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:10px;
   padding:15px 38px;border-radius:50px;
-  font-family:'Inter',sans-serif;font-size:0.85rem;font-weight:600;
-  letter-spacing:0.3px;text-transform:uppercase;
+  font-family:'Cormorant Garamond',serif;font-size:0.95rem;font-weight:600;
+  letter-spacing:0.5px;text-transform:uppercase;
   cursor:pointer;border:none;position:relative;
   transition:all 0.28s ease;
 }
@@ -67,7 +67,7 @@ img{max-width:100%;display:block}
 }
 .field input,.field select,.field textarea{
   width:100%;background:transparent;border:none;border-bottom:1px solid var(--rope);
-  padding:10px 2px;color:var(--ink);font-size:0.97rem;font-family:'Inter',sans-serif;
+  padding:10px 2px;color:var(--ink);font-size:1rem;font-family:'Cormorant Garamond',serif;
   transition:border-color 0.25s;outline:none;
   -webkit-appearance:none;appearance:none;
 }
@@ -84,8 +84,8 @@ img{max-width:100%;display:block}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 .form-submit{
   width:100%;padding:16px 32px;border-radius:50px;background:var(--accent);color:#0C0906;
-  border:none;font-family:'Inter',sans-serif;font-size:0.88rem;font-weight:600;
-  cursor:pointer;letter-spacing:0.3px;text-transform:uppercase;
+  border:none;font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;
+  cursor:pointer;letter-spacing:0.5px;text-transform:uppercase;
   transition:all 0.3s;
 }
 .form-submit:hover{background:var(--gold);transform:translateY(-2px);box-shadow:0 8px 24px rgba(192,122,30,0.4);}
@@ -127,9 +127,9 @@ img{max-width:100%;display:block}
 nav{position:fixed;top:0;width:100%;z-index:1000;padding:22px 0;transition:all 0.4s}
 nav.scrolled{background:rgba(12,9,6,0.94);backdrop-filter:blur(18px);padding:14px 0;border-bottom:1px solid var(--line)}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;max-width:1180px;margin:0 auto;padding:0 24px}
-.nav-logo{font-family:'Outfit',sans-serif;font-weight:600;font-size:1.28rem;color:var(--ink);letter-spacing:2px;display:flex;align-items:center;gap:10px}
+.nav-logo{font-family:'Playfair Display',serif;font-weight:600;font-size:1.28rem;font-style:italic;color:var(--ink);letter-spacing:2px;display:flex;align-items:center;gap:10px}
 .nav-logo span{color:var(--gold)}
-.nav-links{display:flex;gap:32px;list-style:none;font-size:0.84rem;font-weight:500}
+.nav-links{display:flex;gap:32px;list-style:none;font-size:0.95rem;font-weight:500}
 .nav-links a{color:var(--muted);transition:color 0.3s;position:relative;padding:4px 0}
 .nav-links a::after{content:'';position:absolute;bottom:-2px;left:0;width:0;height:1px;background:var(--gold);transition:width 0.3s}
 .nav-links a:hover{color:var(--ink)}
@@ -149,7 +149,8 @@ nav.scrolled{background:rgba(12,9,6,0.94);backdrop-filter:blur(18px);padding:14p
   border:1px solid var(--line-strong);padding:8px 24px;margin-bottom:32px;
   font-weight:500;background:rgba(192,122,30,0.05);border-radius:50px;
 }
-.hero-title{font-family:'Outfit',sans-serif;font-weight:600;font-size:4rem;color:var(--ink);letter-spacing:0.5px;line-height:1.15;margin-bottom:22px}
+.hero-title{font-family:'Playfair Display',serif;font-weight:600;font-size:4rem;color:var(--ink);letter-spacing:0px;line-height:1.15;margin-bottom:22px}
+.hero-title em{font-style:italic;color:var(--gold)}
 .hero-title em{font-style:italic;color:var(--gold);font-weight:500}
 .hero-sub{font-size:1.08rem;color:var(--muted);max-width:600px;margin:0 auto 44px;line-height:1.85}
 .hero-buttons{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
@@ -163,9 +164,9 @@ nav.scrolled{background:rgba(12,9,6,0.94);backdrop-filter:blur(18px);padding:14p
 
 .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
 .eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:0.75rem;text-transform:uppercase;letter-spacing:3px;color:var(--gold);font-weight:600;margin-bottom:18px}
-.about-text h2{font-family:'Outfit',sans-serif;font-weight:600;font-size:2.2rem;margin-bottom:22px;line-height:1.25;color:var(--ink)}
+.about-text h2{font-family:'Playfair Display',serif;font-weight:600;font-size:2.2rem;line-height:1.25;color:var(--ink)}
 .about-text p{color:var(--muted);margin-bottom:16px;font-size:1rem;line-height:1.9}
-.about-quote{font-family:'Inter',sans-serif;font-style:italic;font-size:1.2rem;color:var(--ink);padding:22px 30px;border-left:2px solid var(--accent);margin:26px 0;background:var(--accent-soft)}
+.about-quote{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:1.45rem;color:var(--ink);padding:22px 30px;border-left:2px solid var(--accent);margin:26px 0;background:var(--accent-soft)}
 .about-img{position:relative;overflow:hidden;border:1px solid var(--line-strong);box-shadow:0 20px 60px rgba(0,0,0,0.65)}
 .about-img img{width:100%;height:480px;object-fit:cover;transition:transform 0.8s cubic-bezier(.25,.46,.45,.94);filter:sepia(0.1)}
 .about-img:hover img{transform:scale(1.04)}
@@ -181,9 +182,9 @@ nav.scrolled{background:rgba(12,9,6,0.94);backdrop-filter:blur(18px);padding:14p
 
 .menu-tabs{display:flex;justify-content:center;gap:0;margin-bottom:48px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
 .menu-tab{
-  font-family:'Inter',sans-serif;font-weight:600;padding:12px 28px;
+  font-family:'Cormorant Garamond',serif;font-weight:600;padding:12px 28px;
   background:transparent;border:none;color:var(--muted);cursor:pointer;
-  font-size:0.84rem;letter-spacing:0.8px;text-transform:uppercase;
+  font-size:0.95rem;letter-spacing:0.5px;text-transform:uppercase;
   position:relative;transition:color 0.3s;
 }
 .menu-tab::after{content:'';position:absolute;bottom:-1px;left:0;width:0;height:2px;background:var(--gold);transition:width 0.3s}
@@ -196,7 +197,7 @@ nav.scrolled{background:rgba(12,9,6,0.94);backdrop-filter:blur(18px);padding:14p
 .menu-item:last-child{border-bottom:none}
 .menu-item h4{font-weight:600;font-size:0.97rem;color:var(--ink);margin-bottom:2px}
 .menu-item p{font-size:0.86rem;color:var(--muted)}
-.menu-price{font-family:'Outfit',sans-serif;font-weight:600;font-size:1.12rem;color:var(--gold);white-space:nowrap;margin-left:18px}
+.menu-price{font-family:'Playfair Display',serif;font-weight:600;font-size:1.12rem;color:var(--gold);white-space:nowrap;margin-left:18px}
 
 .gallery-section{background:var(--bg-alt)}
 .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
@@ -218,20 +219,20 @@ nav.scrolled{background:rgba(12,9,6,0.94);backdrop-filter:blur(18px);padding:14p
 .lb-prev{left:10px}.lb-next{right:10px}
 .lb-count{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);color:var(--muted);font-size:0.82rem;letter-spacing:1px}
 
-.section-title{font-family:'Outfit',sans-serif;font-weight:600;font-size:2.55rem;text-align:center;color:var(--ink);margin-bottom:14px}
+.section-title{font-family:'Playfair Display',serif;font-weight:600;font-size:2.55rem;text-align:center;font-style:italic;color:var(--ink);margin-bottom:14px}
 .section-sub{text-align:center;color:var(--muted);font-size:1rem;margin-bottom:52px;max-width:540px;margin-left:auto;margin-right:auto}
 .reviews-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:18px}
 .review{background:var(--bg-alt);border:1px solid var(--line);padding:28px;transition:all 0.3s;position:relative}
-.review::before{content:'\201C';position:absolute;top:10px;left:18px;font-family:'Outfit',sans-serif;font-size:3.2rem;color:var(--accent);opacity:0.28;line-height:1}
+.review::before{content:'\201C';position:absolute;top:10px;left:18px;font-family:'Playfair Display',serif;font-size:3.2rem;color:var(--accent);opacity:0.28;line-height:1}
 .review:hover{border-color:var(--line-strong);transform:translateY(-3px)}
 .review-stars{color:var(--gold);font-size:0.9rem;margin-bottom:10px;letter-spacing:2px}
 .review p{color:var(--ink);font-size:0.94rem;margin:14px 0 16px;position:relative;z-index:1}
 .review-author{display:flex;align-items:center;gap:10px}
-.review-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;color:var(--gold);font-weight:600;font-size:0.9rem;flex-shrink:0}
+.review-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-style:italic;color:var(--gold);font-weight:600;font-size:0.9rem;flex-shrink:0}
 .review-author span{font-size:0.85rem;color:var(--muted)}
 
 .contact-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:60px}
-.contact-info h2{font-family:'Outfit',sans-serif;font-size:2rem;margin-bottom:18px}
+.contact-info h2{font-family:'Playfair Display',serif;font-style:italic;font-size:2rem;margin-bottom:18px}
 .contact-info p{color:var(--muted);margin-bottom:30px}
 .contact-item{display:flex;gap:14px;margin-bottom:24px;align-items:flex-start}
 .contact-item h4{font-size:0.92rem;margin-bottom:4px}
