@@ -31,23 +31,14 @@ img{max-width:100%;display:block}
 .container{max-width:1180px;margin:0 auto;padding:0 24px}
 .section{padding:110px 0;position:relative}
 
-/* 3D COIN - sticky centered section (like fop pattern) */
-.coin-section{
-  min-height:200vh;position:relative;
+/* 3D COIN - Three.js gravity fall overlay */
+#coin-overlay{
+  position:fixed;inset:0;z-index:50;
+  pointer-events:none;
   display:none;
 }
-.coin-sticky{
-  position:sticky;top:calc(50% - 125px);
-  width:250px;height:250px;margin:0 auto;
-  z-index:10;
-}
-.coin-sticky::before{
-  content:'';position:absolute;inset:-50px;
-  background:radial-gradient(circle,rgba(192,122,30,0.10) 0%,transparent 70%);
-  border-radius:50%;pointer-events:none;
-}
-.coin-sticky canvas{width:100%;height:100%;display:block;position:relative;z-index:1}
-@media(min-width:1040px){.coin-section{display:block}}
+#coin-overlay canvas{width:100%;height:100%;display:block}
+@media(min-width:1040px){#coin-overlay{display:block}}
 
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:10px;
@@ -245,7 +236,7 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
   .hero-title{font-size:2.6rem}
   .gallery-grid{grid-template-columns:repeat(2,1fr)}
   .form-row{grid-template-columns:1fr}
-  .coin-section{display:none!important}
+  #coin-overlay{display:none!important}
 }
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
@@ -287,11 +278,7 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
   </div>
 </section>
 
-<section class="coin-section" id="moneda">
-  <div class="coin-sticky">
-    <canvas id="coinCanvas"></canvas>
-  </div>
-</section>
+<div id="coin-overlay"><canvas id="coinCanvas"></canvas></div>
 
 <section class="section" id="sobre">
   <div class="container">
@@ -558,145 +545,172 @@ form.addEventListener('submit', e => {
   formMsg.className = 'form-message ok';
   form.reset();
 });
+</script>
 
-/* 3D COIN - sticky centered (like fop pattern) */
-(function(){
-  var canvas=document.getElementById('coinCanvas');
-  if(!canvas)return;
-  var wrap=canvas.parentElement;
-  var ctx=canvas.getContext('2d');
-  var size=250;
-  var dpr=window.devicePixelRatio||1;
-  function resize(){
-    canvas.width=size*dpr;
-    canvas.height=size*dpr;
-    canvas.style.width=size+'px';
-    canvas.style.height=size+'px';
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-  }
-  resize();
+<!-- 3D COIN - Three.js gravity fall -->
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.184.0/build/three.module.js';
 
-  var coin={
-    x:size/2,y:size/2,
-    r:size*0.38,
-    scrollAngle:0,
-    floatOffset:0
-  };
+const container = document.getElementById('coin-overlay');
+const canvas = document.getElementById('coinCanvas');
+if (!container || !canvas) throw new Error('Missing coin elements');
 
-  function draw(){
-    coin.r=size*0.38;
-    coin.x=size/2;
-    coin.y=size/2;
-    ctx.clearRect(0,0,size,size);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 50);
+camera.position.set(0, 0.2, 6);
+camera.lookAt(0, 0, 0);
 
-    var angle=coin.scrollAngle+coin.floatOffset;
-    var scaleX=Math.cos(angle);
-    var absScale=Math.max(Math.abs(scaleX),0.08);
-    var faceVisible=scaleX>0;
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 2;
 
-    ctx.save();
-    ctx.translate(coin.x,coin.y);
-    ctx.scale(absScale,1);
+const ambient = new THREE.AmbientLight(0x404060, 0.5);
+scene.add(ambient);
+const key = new THREE.DirectionalLight(0xffeedd, 3);
+key.position.set(3, 5, 4);
+scene.add(key);
+const fill = new THREE.DirectionalLight(0x4488ff, 0.6);
+fill.position.set(-3, 1, 2);
+scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffffff, 1);
+rim.position.set(0, -1, -4);
+scene.add(rim);
+const top = new THREE.DirectionalLight(0xffcc66, 0.4);
+top.position.set(0, 6, 0);
+scene.add(top);
 
-    ctx.save();
-    ctx.scale(1/absScale,1);
-    ctx.translate(0,coin.r*0.35);
-    ctx.scale(1,0.3);
-    ctx.beginPath();
-    ctx.arc(0,0,coin.r,0,Math.PI*2);
-    ctx.fillStyle='rgba(0,0,0,0.35)';
-    ctx.filter='blur(3px)';
-    ctx.fill();
-    ctx.restore();
+const coinGroup = new THREE.Group();
 
-    var grad=ctx.createRadialGradient(
-      -coin.r*0.35,-coin.r*0.4,coin.r*0.1,
-      0,0,coin.r*1.05
-    );
-    if(faceVisible){
-      grad.addColorStop(0,'#FCEBA8');
-      grad.addColorStop(0.3,'#E8C060');
-      grad.addColorStop(0.65,'#C07A1E');
-      grad.addColorStop(1,'#6E4811');
-    } else {
-      grad.addColorStop(0,'#C9A157');
-      grad.addColorStop(0.45,'#9A6E28');
-      grad.addColorStop(1,'#4F3410');
-    }
-    ctx.beginPath();
-    ctx.arc(0,0,coin.r,0,Math.PI*2);
-    ctx.fillStyle=grad;
-    ctx.fill();
+const texSize = 1024;
+const tc = document.createElement('canvas');
+tc.width = tc.height = texSize;
+const tCtx = tc.getContext('2d');
+const g = tCtx.createRadialGradient(texSize/2, texSize/2, 0, texSize/2, texSize/2, texSize/2);
+g.addColorStop(0, '#FCEBA8');
+g.addColorStop(0.3, '#E8C060');
+g.addColorStop(0.65, '#C07A1E');
+g.addColorStop(1, '#7A4A0E');
+tCtx.fillStyle = g;
+tCtx.fillRect(0, 0, texSize, texSize);
+tCtx.beginPath();
+tCtx.arc(texSize/2, texSize/2, texSize*0.44, 0, Math.PI*2);
+tCtx.strokeStyle = '#6A3A08';
+tCtx.lineWidth = 8;
+tCtx.stroke();
+tCtx.beginPath();
+tCtx.arc(texSize/2, texSize/2, texSize*0.37, 0, Math.PI*2);
+tCtx.strokeStyle = '#B58A2E';
+tCtx.lineWidth = 2;
+tCtx.setLineDash([10, 14]);
+tCtx.stroke();
+tCtx.setLineDash([]);
+tCtx.fillStyle = '#4A2A04';
+tCtx.font = 'bold '+(texSize*0.48)+'px Georgia,serif';
+tCtx.textAlign = 'center';
+tCtx.textBaseline = 'middle';
+tCtx.fillText('G', texSize/2, texSize/2+6);
+tCtx.font = (texSize*0.055)+'px Georgia,serif';
+tCtx.fillStyle = '#6A4A14';
+tCtx.fillText('GALEON', texSize/2, texSize*0.13);
+tCtx.fillText('TAVERN', texSize/2, texSize*0.87);
+for (let i = 0; i < 12; i++) {
+  const a = (i/12)*Math.PI*2;
+  tCtx.beginPath();
+  tCtx.arc(texSize/2+Math.cos(a)*texSize*0.32, texSize/2+Math.sin(a)*texSize*0.32, 8, 0, Math.PI*2);
+  tCtx.fillStyle = '#8A6A22';
+  tCtx.fill();
+}
+const tex = new THREE.CanvasTexture(tc);
 
-    ctx.lineWidth=Math.max(1.5,coin.r*0.08);
-    ctx.strokeStyle='rgba(50,32,8,0.6)';
-    ctx.stroke();
+const bodyGeom = new THREE.CylinderGeometry(1, 1, 0.1, 64);
+const bodyMat = new THREE.MeshStandardMaterial({ map: tex, metalness: 0.9, roughness: 0.2 });
+const body = new THREE.Mesh(bodyGeom, bodyMat);
+body.rotation.x = Math.PI/2;
+coinGroup.add(body);
 
-    if(absScale>0.35){
-      ctx.beginPath();
-      ctx.arc(0,0,coin.r*0.72,0,Math.PI*2);
-      ctx.strokeStyle='rgba(50,32,8,0.4)';
-      ctx.lineWidth=Math.max(1,coin.r*0.045);
-      ctx.stroke();
+const edgeGeom = new THREE.TorusGeometry(1, 0.05, 16, 64);
+const edgeMat = new THREE.MeshStandardMaterial({ color: 0xA0701E, metalness: 0.85, roughness: 0.35 });
+const edge = new THREE.Mesh(edgeGeom, edgeMat);
+edge.rotation.x = Math.PI/2;
+coinGroup.add(edge);
 
-      ctx.fillStyle='rgba(50,32,8,0.6)';
-      ctx.font=(coin.r*0.9)+'px Georgia';
-      ctx.textAlign='center';
-      ctx.textBaseline='middle';
-      ctx.fillText(faceVisible?'G':'☠',0,coin.r*0.05);
-    }
+for (let i = 0; i < 60; i++) {
+  const a = (i/60)*Math.PI*2;
+  const d = new THREE.Mesh(
+    new THREE.SphereGeometry(0.018, 4, 4),
+    new THREE.MeshStandardMaterial({ color: 0x7A4A0E, metalness: 0.7, roughness: 0.5 })
+  );
+  d.position.set(Math.cos(a)*1.03, Math.sin(a)*1.03, 0.052);
+  coinGroup.add(d);
+}
+coinGroup.position.y = 5;
+scene.add(coinGroup);
 
-    var glintX=-coin.r*0.5+((angle%(Math.PI*2))/(Math.PI*2))*coin.r*1.4;
-    var glintGrad=ctx.createLinearGradient(glintX-3,0,glintX+3,0);
-    glintGrad.addColorStop(0,'rgba(255,255,255,0)');
-    glintGrad.addColorStop(0.5,'rgba(255,255,255,0.5)');
-    glintGrad.addColorStop(1,'rgba(255,255,255,0)');
-    ctx.save();
-    ctx.scale(1/absScale,1);
-    ctx.beginPath();
-    ctx.arc(0,0,coin.r,0,Math.PI*2);
-    ctx.clip();
-    ctx.fillStyle=glintGrad;
-    ctx.fillRect(-coin.r,-coin.r,coin.r*2,coin.r*2);
-    ctx.restore();
+const pc = 100;
+const pg = new THREE.BufferGeometry();
+const pos = new Float32Array(pc*3);
+const opacities = new Float32Array(pc);
+for (let i = 0; i < pc; i++) {
+  const theta = Math.random()*Math.PI*2;
+  const r = 1.5 + Math.random()*4;
+  pos[i*3] = Math.cos(theta)*r;
+  pos[i*3+1] = (Math.random()-0.5)*6;
+  pos[i*3+2] = Math.sin(theta)*r;
+  opacities[i] = 0.2 + Math.random()*0.5;
+}
+pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+pg.setAttribute('opacity', new THREE.BufferAttribute(opacities, 1));
+const pm = new THREE.PointsMaterial({
+  color: 0xD4A544, size: 0.03, transparent: true,
+  opacity: 0.4, blending: THREE.AdditiveBlending,
+});
+const particles = new THREE.Points(pg, pm);
+scene.add(particles);
 
-    if(absScale>0.2){
-      ctx.save();
-      ctx.scale(1/absScale,1);
-      ctx.beginPath();
-      ctx.arc(0,0,coin.r,0,Math.PI*2);
-      ctx.strokeStyle='rgba(255,200,80,0.2)';
-      ctx.lineWidth=2;
-      ctx.stroke();
-      ctx.restore();
-    }
+const glowGeom = new THREE.SphereGeometry(1.4, 24, 24);
+const glowMat = new THREE.MeshBasicMaterial({
+  color: 0xD4A544, transparent: true, opacity: 0.06,
+  blending: THREE.AdditiveBlending, depthWrite: false,
+});
+const glow = new THREE.Mesh(glowGeom, glowMat);
+coinGroup.add(glow);
 
-    ctx.restore();
-  }
+const START_Y = 4.5, END_Y = -4.5;
 
-  var floatTime=0;
-  function updateScroll(){
-    var docH=document.documentElement.scrollHeight-window.innerHeight;
-    var pct=docH>0?Math.min(1,Math.max(0,window.scrollY/docH)):0;
-    coin.scrollAngle=pct*Math.PI*6;
-    floatTime+=0.012;
-    coin.floatOffset=Math.sin(floatTime)*0.08;
-    draw();
-  }
+function updateCoin(progress) {
+  const t = Math.min(1, Math.max(0, progress));
+  const gravityT = t*t;
+  coinGroup.position.y = START_Y + (END_Y - START_Y)*gravityT;
+  const rotT = t < 0.85 ? t/0.85 : 1 - (t-0.85)/0.15*0.2;
+  coinGroup.rotation.x = rotT * Math.PI * 4;
+  coinGroup.rotation.z = rotT * Math.PI * 2;
+  glowMat.opacity = 0.06 * (1 - t*0.7);
+}
 
-  window.addEventListener('scroll',updateScroll,{passive:true});
-  updateScroll();
+function resize() {
+  const w = container.clientWidth;
+  const h = container.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
 
-  (function animLoop(){
-    floatTime+=0.012;
-    coin.floatOffset=Math.sin(floatTime)*0.08;
-    var docH=document.documentElement.scrollHeight-window.innerHeight;
-    var pct=docH>0?Math.min(1,Math.max(0,window.scrollY/docH)):0;
-    coin.scrollAngle=pct*Math.PI*6;
-    draw();
-    requestAnimationFrame(animLoop);
-  })();
-})();
+function onScroll() {
+  const dh = document.documentElement.scrollHeight - window.innerHeight;
+  updateCoin(dh > 0 ? Math.min(1, Math.max(0, window.scrollY / dh)) : 0);
+}
+window.addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+function animate() {
+  requestAnimationFrame(animate);
+  particles.rotation.y += 0.0004;
+  renderer.render(scene, camera);
+}
+animate();
 </script>
 </body>
 </html>
