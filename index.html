@@ -253,7 +253,6 @@ footer p{color:var(--muted);font-size:0.92rem;max-width:300px}
   .hero-title{font-size:2.6rem}
   .gallery-grid{grid-template-columns:repeat(2,1fr)}
   .form-row{grid-template-columns:1fr}
-  #coin-overlay{transform:scale(0.65);transform-origin:center center}
   .hero-sub{margin-bottom:28px}
   .hero{padding-bottom:60px}
   .menu-panel.active{column-count:1}
@@ -585,20 +584,20 @@ if(!container||!canvas||typeof THREE==='undefined')return;
 var isMobile=window.innerWidth<768;
 var scene=new THREE.Scene();
 var camera=new THREE.PerspectiveCamera(40,container.clientWidth/container.clientHeight,0.1,50);
-camera.position.set(0,0.2,6);
+camera.position.set(0,0.2,isMobile?7:6);
 var renderer=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:!isMobile});
 renderer.setPixelRatio(isMobile?1:Math.min(window.devicePixelRatio,1.5));
 renderer.setSize(container.clientWidth,container.clientHeight);
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=2;
-var seg=isMobile?24:48;
+var seg=isMobile?16:48;
 var ambient=new THREE.AmbientLight(0x404060,0.5);scene.add(ambient);
 var key=new THREE.DirectionalLight(0xffeedd,3);key.position.set(3,5,4);scene.add(key);
 var fill=new THREE.DirectionalLight(0x4488ff,0.6);fill.position.set(-3,1,2);scene.add(fill);
 var rim=new THREE.DirectionalLight(0xffffff,1);rim.position.set(0,-1,-4);scene.add(rim);
 var top=new THREE.DirectionalLight(0xffcc66,0.4);top.position.set(0,6,0);scene.add(top);
 var coinGroup=new THREE.Group();
-var texSize=isMobile?512:1024,tc=document.createElement('canvas');tc.width=tc.height=texSize;
+var texSize=isMobile?256:1024,tc=document.createElement('canvas');tc.width=tc.height=texSize;
 var tCtx=tc.getContext('2d');
 var g=tCtx.createRadialGradient(texSize/2,texSize/2,0,texSize/2,texSize/2,texSize/2);
 g.addColorStop(0,'#FCEBA8');g.addColorStop(0.3,'#E8C060');g.addColorStop(0.65,'#C07A1E');g.addColorStop(1,'#7A4A0E');
@@ -611,15 +610,16 @@ for(var i=0;i<12;i++){var a=i/12*Math.PI*2;tCtx.beginPath();tCtx.arc(texSize/2+M
 var tex=new THREE.CanvasTexture(tc);
 var body=new THREE.Mesh(new THREE.CylinderGeometry(1,1,0.1,seg),new THREE.MeshStandardMaterial({map:tex,metalness:0.9,roughness:0.2}));body.rotation.x=Math.PI/2;coinGroup.add(body);
 var edge=new THREE.Mesh(new THREE.TorusGeometry(1,0.05,seg/2,seg),new THREE.MeshStandardMaterial({color:0xA0701E,metalness:0.85,roughness:0.35}));edge.rotation.x=Math.PI/2;coinGroup.add(edge);
-var rd=isMobile?24:48;for(i=0;i<rd;i++){a=i/rd*Math.PI*2;var d=new THREE.Mesh(new THREE.SphereGeometry(0.018,3,3),new THREE.MeshStandardMaterial({color:0x7A4A0E,metalness:0.7,roughness:0.5}));d.position.set(Math.cos(a)*1.03,Math.sin(a)*1.03,0.052);coinGroup.add(d)}
-coinGroup.position.y=4.5;coinGroup.rotation.x=0.8;coinGroup.rotation.z=0.5;scene.add(coinGroup);
-var pc=isMobile?20:60,pg=new THREE.BufferGeometry(),pos=new Float32Array(pc*3);
+var rd=isMobile?16:48;for(i=0;i<rd;i++){a=i/rd*Math.PI*2;var d=new THREE.Mesh(new THREE.SphereGeometry(0.018,3,3),new THREE.MeshStandardMaterial({color:0x7A4A0E,metalness:0.7,roughness:0.5}));d.position.set(Math.cos(a)*1.03,Math.sin(a)*1.03,0.052);coinGroup.add(d)}
+if(isMobile)coinGroup.scale.set(0.55,0.55,0.55);
+coinGroup.position.x=0;coinGroup.position.y=5;coinGroup.rotation.x=isMobile?1.4:0.8;coinGroup.rotation.z=isMobile?0.9:0.5;scene.add(coinGroup);
+var pc=isMobile?15:60,pg=new THREE.BufferGeometry(),pos=new Float32Array(pc*3);
 for(i=0;i<pc;i++){var theta=Math.random()*Math.PI*2;var r=1.5+Math.random()*4;pos[i*3]=Math.cos(theta)*r;pos[i*3+1]=(Math.random()-0.5)*6;pos[i*3+2]=Math.sin(theta)*r}
 pg.setAttribute('position',new THREE.BufferAttribute(pos,3));
-var pm=new THREE.PointsMaterial({color:0xD4A544,size:isMobile?0.02:0.025,transparent:true,opacity:0.3,blending:THREE.AdditiveBlending});
+var pm=new THREE.PointsMaterial({color:0xD4A544,size:isMobile?0.015:0.025,transparent:true,opacity:0.3,blending:THREE.AdditiveBlending});
 scene.add(new THREE.Points(pg,pm));
 var glow=new THREE.Mesh(new THREE.SphereGeometry(1.4,seg/2,seg/2),new THREE.MeshBasicMaterial({color:0xD4A544,transparent:true,opacity:0.06,blending:THREE.AdditiveBlending,depthWrite:false}));coinGroup.add(glow);
-function ud(p){var t=Math.min(1,Math.max(0,p)),gt=t*t;coinGroup.position.y=4.5+(-9)*gt;var rt=t<0.85?t/0.85:1-(t-0.85)/0.15*0.15;coinGroup.rotation.x=0.8+rt*Math.PI*4;coinGroup.rotation.z=0.5+rt*Math.PI*2.2;glow.material.opacity=0.06*(1-t*0.7)}
+function ud(p){var t=Math.min(1,Math.max(0,p)),gt=t*t;coinGroup.position.y=5-9.5*gt;var rt=Math.min(1,t*1.2);coinGroup.rotation.x=(isMobile?1.4:0.8)+rt*Math.PI*3;coinGroup.rotation.z=(isMobile?0.9:0.5)+rt*Math.PI*1.5;glow.material.opacity=0.06*(1-t*0.7)}
 function rs(){renderer.setSize(container.clientWidth,container.clientHeight);camera.aspect=container.clientWidth/container.clientHeight;camera.updateProjectionMatrix()}
 window.addEventListener('resize',rs);
 function sc(){var dh=document.documentElement.scrollHeight-window.innerHeight;ud(dh>0?Math.min(1,Math.max(0,window.scrollY/dh)):0)}
